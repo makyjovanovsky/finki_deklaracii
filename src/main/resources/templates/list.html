@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Declarations by Semester</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+            crossorigin="anonymous"></script>
+
+    <style>
+        .navbar {
+            background-color: rgba(5, 2, 2, 0.19) !important;
+        }
+
+        th {
+            width: 200px;
+            text-align: left;
+            padding: 5px;
+        }
+
+        .container {
+            margin-bottom: 40px;
+        }
+
+        .text-button {
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
+            cursor: pointer;
+            color: blue;
+        }
+
+        .custom-form {
+            padding-top: 10px;
+        }
+
+        .custom-file-upload {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .custom-file-upload input[type="file"] {
+            position: absolute;
+            font-size: 100px;
+            right: 0;
+            top: 0;
+            opacity: 0;
+        }
+
+
+    </style>
+</head>
+<body>
+
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">FINKI</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText"
+                aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Почетна</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/list">Преглед по години</a>
+                </li>
+
+            </ul>
+            <span class="navbar-text" style="padding-right:10px;">
+                <a href="/logout">
+                    <i class="fas fa-sign-in-alt" style="color: rgb(5,0,0)"></i>
+                </a>
+      </span>
+        </div>
+    </div>
+</nav>
+
+<br>
+
+<div class="container border" th:each="semester : ${semesters}">
+    <div class="d-flex justify-content-between">
+        <h1 th:text="|${semester.type} ${semester.yearFrom} - ${semester.yearTo}|"></h1>
+        <div class="d-flex" >
+            <form class="custom-form" method="post" th:action="@{'/import/report/{id}' (id = ${semester.id})}" enctype="multipart/form-data">
+                <div class="custom-file-upload" style="margin-right: 10px;">
+                    <label for="fileInput" class="btn btn-primary">Внеси податоци</label>
+                    <input type="file" id="fileInput" name="file" onchange="submitForm(this)">
+                </div>
+            </form>
+            <form class="custom-form" method="get" th:action="@{'/download/report/{id}' (id = ${semester.id})}">
+                <button type="submit" class="btn btn-success">Генерирај извештај</button>
+            </form>
+        </div>
+
+    </div>
+    <hr>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col" style="width: 5%;">#</th>
+            <th scope="col" style="width: 15%;">Предмет</th>
+            <th scope="col" style="width: 15%;">Тип на час</th>
+            <th scope="col" style="width: 10%;">Број на часови</th>
+            <th scope="col" style="width: 10%;">Тематски со друг наставник</th>
+            <th scope="col" style="width: 10%;">Јазик</th>
+            <th scope="col" style="width: 10%;">Број на студенти</th>
+            <th scope="col" style="width: 5%;">Година</th>
+            <th scope="col" style="width: 5%;">Консултативни</th>
+            <th scope="col" style="width: 5%;">Забелешка</th>
+            <th scope="col" style="width: 5%">Акција #1</th>
+            <th scope="col" style="width: 5%">Акција #2</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="declaration, num : ${semester.declarations}">
+            <th scope="row" th:text="${num.count}"></th>
+            <td th:text="${declaration.subject.name}"></td>
+            <td th:text="${#strings.replace(declaration.classType, '_', ' ')}"></td>
+            <td th:text="${declaration.numberOfClasses}"></td>
+            <td th:text="${declaration.otherTeacher == true ? 'Да' : 'Не'}"></td>
+            <td th:text="${declaration.language}"></td>
+            <td th:text="${declaration.numberOfStudents}"></td>
+            <td th:text="${semester.type == type ? semester.yearFrom : semester.yearTo}"></td>
+            <td th:text="${declaration.consultative == true ? 'Да' : 'Не'}"></td>
+            <td th:if="${declaration.note == '/'}" th:text="${declaration.note}"></td>
+            <td th:unless="${declaration.note == '/'}">
+                <button class="text-button" data-bs-toggle="modal" data-bs-target="#myModal"
+                        th:data-note="${declaration.note}">Преглед
+                </button>
+            </td>
+            <td>
+                <form method="get" th:action="@{'/edit/declaration/{id}' (id = ${declaration.id})}">
+                    <button type="submit" class="btn btn-primary">Промени</button>
+                </form>
+            </td>
+
+            <td>
+                <form method="post" th:action="@{'/delete/declaration/{id}' (id = ${declaration.id})}">
+                    <button type="submit" class="btn btn-danger">Избриши</button>
+                </form>
+            </td>
+
+        </tr>
+        </tbody>
+    </table>
+    <br>
+    <br>
+    <br>
+</div>
+
+<div class="container">
+    <div class="row mt-auto">
+        <div th:if="${semesters.totalPages > 1}" style="display: flex; justify-content: center;">
+            <ul class="pagination">
+                <li th:class="${semesters.number == 0} ? 'disabled'">
+                    <a th:href="@{/list(page=0)}" class="btn btn-sm btn-primary custom-button">&laquo;</a>
+                </li>
+                <li th:each="pageNumber : ${#numbers.sequence(0, semesters.totalPages - 1)}">
+                    <a th:href="@{/list(page=${pageNumber})}"
+                       th:text="${pageNumber + 1}"
+                       th:class="${semesters.number == pageNumber} ? 'btn btn-sm btn-primary active custom-button' : 'btn btn-sm btn-primary custom-button'"></a>
+                </li>
+                <li th:class="${semesters.number == semesters.totalPages - 1} ? 'disabled'">
+                    <a th:href="@{/list(page=${semesters.totalPages - 1})}"
+                       class="btn btn-sm btn-primary custom-button">&raquo;</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Забелешка</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="noteContent"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Затвори</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const buttons = document.querySelectorAll('.text-button');
+        const noteContent = document.getElementById('noteContent');
+
+        buttons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                const note = button.getAttribute('data-note');
+                noteContent.textContent = note;
+            });
+        });
+    });
+
+    function openFileInput() {
+        var fileInput = document.getElementById('fileInput');
+        fileInput.click();
+    }
+
+    function submitForm(inputElement) {
+        var form = inputElement.closest('form');
+        form.submit();
+    }
+</script>
+
+</body>
+</html>
